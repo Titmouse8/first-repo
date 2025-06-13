@@ -14,6 +14,10 @@ class MenuItem(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     description = models.TextField(max_length=200)
+    def __str__(self):
+        return self.item_name
+    class Meta():
+        db_table = "Menu"
 
 class Order(models.Model):
     class StatusChoices(models.TextChoices):
@@ -21,13 +25,15 @@ class Order(models.Model):
         CONFIRMED = "confirmed"
         CANCELLED = "cancelled"
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    delivery_crew = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='delivery_crew', null=True)
     date = models.DateField()
     status = models.CharField(
         max_length=10,
         choices = StatusChoices.choices,
         default= StatusChoices.PENDING
     )
+
     
 
 class OrderItem(models.Model):
@@ -35,8 +41,14 @@ class OrderItem(models.Model):
     quantity = models.PositiveSmallIntegerField()
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
+    @property
     def item_subtotal(self):
         return self.menu_item.price * self.quantity
     
+    def __str__(self):
+        return f"{self.quantity} x {self.menu_item.price} in order {self.order.pk}"
+    
+    class Meta():
+        unique_together = ('menu_item', 'order')
 
     
