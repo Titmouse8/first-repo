@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+import uuid
 # Create your models here.
 
 class Category(models.Model):
@@ -24,31 +24,37 @@ class Order(models.Model):
         PENDING = "pending"
         CONFIRMED = "confirmed"
         CANCELLED = "cancelled"
-
+    
+    order_id = models.BigAutoField(primary_key=True)
+    # A UUID (Universally Unique Identifier) is a 128-bit value designed to provide a globally unique identifier. 
+    # It's commonly used for identifying entities across various systems and databases, ensuring that each identifier is distinct. 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     delivery_crew = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='delivery_crew', null=True)
-    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=10,
         choices = StatusChoices.choices,
         default= StatusChoices.PENDING
     )
+    menuitems = models.ManyToManyField(MenuItem, through='OrderItem', related_name='orders')
+
+    def __str__(self):
+        return f'Order {self.order_id} created by {self.user}'
 
     
 
 class OrderItem(models.Model):
-    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    menuitem = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     quantity = models.PositiveSmallIntegerField()
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
     @property
     def item_subtotal(self):
-        return self.menu_item.price * self.quantity
+        return self.menuitem.price * self.quantity
     
     def __str__(self):
-        return f"{self.quantity} x {self.menu_item.price} in order {self.order.pk}"
+        return f"{self.quantity} x {self.menuitem.item_name} in order {self.order.order_id}"
     
-    class Meta():
-        unique_together = ('menu_item', 'order')
+
 
     
