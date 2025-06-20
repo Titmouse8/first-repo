@@ -5,7 +5,9 @@ urlpatterns = [
     path('', views.index, name="index"),
     path('category/', views.CategoryView.as_view(), name='category'),
     path('menu-item/', views.MenuItemView.as_view(), name='menuitem'),
-    path('menu-item/<int:pk>', views.MenuItemSingleView.as_view(), name='menuitem-single'),
-    path('order-item/<int:pk>', views.OrderItemView.as_view(), name='orderitem'),
+    path('menu-item/<int:product_id>', views.MenuItemSingleView.as_view(), name='menuitem-single'),
+    path('order-item/<int:pk>', views.OrderItemSingleView.as_view(), name='orderitem-single'),
     path('order/', views.OrderView.as_view(), name='order'),
+    path('order-item/', views.OrderItemView.as_view(), name='orderitem'),
+    path('menu-item/info/', views.menuitem_info),
 ]

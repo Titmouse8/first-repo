@@ -28,7 +28,7 @@ class Order(models.Model):
     order_id = models.BigAutoField(primary_key=True)
     # A UUID (Universally Unique Identifier) is a 128-bit value designed to provide a globally unique identifier. 
     # It's commonly used for identifying entities across various systems and databases, ensuring that each identifier is distinct. 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,)
     delivery_crew = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='delivery_crew', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
@@ -46,6 +46,8 @@ class Order(models.Model):
 class OrderItem(models.Model):
     menuitem = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    #related name funguje ak chceme dostať druhú stranu vzťahu - OrderItem.order - dosteneme objednávku kt prislúcha k danému orderitem
+    #order.items.all() - dostaneme všetky orderitem v danej objednavke
     quantity = models.PositiveSmallIntegerField()
 
     @property

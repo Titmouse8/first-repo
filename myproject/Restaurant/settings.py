@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Booking',
     'rest_framework',
+    'django_extensions',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'Restaurant.urls'
