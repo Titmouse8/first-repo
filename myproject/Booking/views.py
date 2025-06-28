@@ -11,6 +11,8 @@ from datetime import datetime
 from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view
 from django.db.models import Max
+from .permissions import IsManager, IsOwner
+from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 def index(request):
@@ -23,19 +25,39 @@ class CategoryView(generics.ListAPIView):
 class MenuItemView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.prefetch_related('category')
     serializer_class = MenuItemSerializer
+    permission_classes = IsManager
+    #def get_permissions(self):
+        #permission_calsses = []
+        #if self.request.method != 'GET':
+            #permission_calsses = [IsAuthenticated]
+        #return [permission() for permission in permission_calsses]
 
 class MenuItemSingleView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     lookup_url_kwarg = 'product_id'
+    permission_classes = [IsManager,]
 
 class OrderItemSingleView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
+    permission_classes = [IsOwner,]
 
 class OrderView(generics.ListCreateAPIView):
     queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
     serializer_class = OrderSerializer
+    #permission_classes = [IsAuthenticated,]
+
+class UserOrderView(generics.ListAPIView):
+    #returns only orders created by user itself
+    queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated,]
+    def get_queryset(self):
+        user = self.request.user
+        qs = super().get_queryset()   #dostaneme queryset kt.sme definovali vyššie
+        return qs.filter(user=user)
+
 
 class OrderItemView(generics.ListCreateAPIView):
     queryset = OrderItem.objects.all()
