@@ -13,6 +13,15 @@ from rest_framework.decorators import api_view
 from django.db.models import Max
 from .permissions import IsManager, IsOwner
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.utils.timezone import localdate, datetime
+from django.http import JsonResponse
+from django.core import serializers
+from datetime import datetime
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from .forms import BookingForm
 # Create your views here.
 
 def index(request):
@@ -25,12 +34,14 @@ class CategoryView(generics.ListAPIView):
 class MenuItemView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.prefetch_related('category')
     serializer_class = MenuItemSerializer
-    permission_classes = IsManager
+    #permission_classes = [IsManager,]
     #def get_permissions(self):
         #permission_calsses = []
         #if self.request.method != 'GET':
             #permission_calsses = [IsAuthenticated]
         #return [permission() for permission in permission_calsses]
+    
+
 
 class MenuItemSingleView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
@@ -63,13 +74,56 @@ class OrderItemView(generics.ListCreateAPIView):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
 
-@api_view(['GET'])
-def menuitem_info(request):
-    menuitems = MenuItem.objects.all()
-    serializer = MenuItemInfoSerializer({
-        'menuitems': menuitems,
-        'count': len(menuitems),
-        'max_price': menuitems.aggregate(max_price=Max('price'))['max_price']
-    }
-    )
-    return Response(serializer.data)
+
+class MenuitemInfo(APIView):
+    def get(self, request):
+        menuitems = MenuItem.objects.all()
+        serializer = MenuItemInfoSerializer({
+            'menuitems': menuitems,
+            'count': len(menuitems),
+            'max_price': menuitems.aggregate(max_price=Max('price'))['max_price']
+        }
+        )
+        return Response(serializer.data)
+
+
+
+def reservations(request):
+    bookings = Booking.objects.all()
+    booking_json = serializers.serialize('json', bookings)
+    return render(request, 'bookings.html', {'bookings': booking_json})
+
+def book(request):
+    book = BookingForm()
+    if request.method == 'POST':
+        book = BookingForm(request.POST)
+        if book.is_valid():
+            cd = book.cleaned_data
+            new_book = Booking(
+                name = cd['name'],
+                reservation_date = cd['date'],
+                reservation_slot = cd['time'],
+            )
+            new_book.save()
+    return render(request, 'book.html', {'book_form': book})
+
+@csrf_exempt
+def bookings(request):
+    if request.method == 'POST':
+        data = json.load(request)
+        exist = Booking.objects.filter(reservation_date = data['reservation_date']).filter(reservation_slot = data['reservation_slot']).exists()
+        if exist == False:
+            booking = Booking(
+                name = data['name'],
+                reservation_date = data['reservation_date'],
+                reservation_slot = data['reservation_slot'],
+            )
+            booking.save()
+        else:
+            return HttpResponse("{'error':1}", content_type = 'application/json')
+    
+    date = request.GET.get('date', datetime.today().date())
+    bookings = Booking.objects.all().filter(reservation_date = date)
+    bookings_json = serializers.serialize('json', bookings)
+    #return render(request, 'booking.html', {'bookings': bookings_json})
+    return HttpResponse(bookings_json, content_type = 'application/json')

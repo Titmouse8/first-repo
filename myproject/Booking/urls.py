@@ -11,6 +11,6 @@ urlpatterns = [
     path('user-order/', views.UserOrderView.as_view(), name='user-order'),
     path('order-item/', views.OrderItemView.as_view(), name='orderitem'),
     path('order-item/<int:pk>', views.OrderItemSingleView.as_view(), name='orderitem-single'),
-    path('menu-item/info/', views.menuitem_info),
+    path('menu-item/info/', views.MenuitemInfo.as_view()),
     path('api-token-auth/', obtain_auth_token),
 ]
