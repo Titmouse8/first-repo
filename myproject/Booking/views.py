@@ -12,7 +12,7 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view
 from django.db.models import Max
 from .permissions import IsManager, IsOwner
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from django.utils.timezone import localdate, datetime
 from django.http import JsonResponse
@@ -22,6 +22,9 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from .forms import BookingForm
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import MenuItemFilter
 # Create your views here.
 
 def index(request):
@@ -35,11 +38,20 @@ class MenuItemView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.prefetch_related('category')
     serializer_class = MenuItemSerializer
     #permission_classes = [IsManager,]
-    #def get_permissions(self):
-        #permission_calsses = []
-        #if self.request.method != 'GET':
-            #permission_calsses = [IsAuthenticated]
-        #return [permission() for permission in permission_calsses]
+    filterset_class = MenuItemFilter
+    filter_backends = [
+        DjangoFilterBackend, 
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    search_fields = ['=item_name', 'description', 'category__category_name']        #case insensitive partial matching filter, search across given fields using ?search= , 
+    #if you use = with field name: =item_name return only exact match with search filter
+    ordering_fields = ['item_name', 'price']
+    def get_permissions(self):
+        permission_classes = [AllowAny]
+        if self.request.method != 'GET':
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
     
 
 

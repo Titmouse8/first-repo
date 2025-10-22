@@ -1,0 +1,35 @@
+GET http://127.0.0.1:8000/menu-item/ HTTP/1.1
+
+###
+
+GET http://127.0.0.1:8000/menu-item/6 HTTP/1.1
+
+###
+PATCH http://127.0.0.1:8000/menu-item/6 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU5NzU5MTY1LCJpYXQiOjE3NTk3NTg4NjUsImp0aSI6ImM3ZGExZjJlOWQ2NzQ0MDliOTNiZDEyZGFmNWZlNjkyIiwidXNlcl9pZCI6Mn0.JxaIn532scQ1VYui2QGseEAd1f7EeI1bEZSVlo7obA4
+
+{
+    "price": 4.80
+}
+
+###
+
+POST http://127.0.0.1:8000/menu-item/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "item_name": "Garlic soup",
+    "category": "Soup",
+    "price": 4.50,
+    "description": "Delicious soup"
+}
+
+###
+POST http://127.0.0.1:8000/token/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "rest_manager",
+    "password": "restika123"
+}

@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% load static %}
+    <title>Little Lemon</title>
+</head>
+<body>
+<div>
+    <h1>User comments</h1>
+    <script>
+        var today = new Date();
+        var hourNow = today.getHours();
+        var greeting;
+        if (hourNow > 18) {
+            greeting = 'Good evening';
+        } else if (hourNow >12) {
+            greeting = 'Good afternoon';
+        } else if (hourNow > 0) {
+            greeting = 'Good morning';
+        } else {
+            greeting = 'Welcome!';
+        }
+        document.write(greeting);
+    </script>
+    <form method="POST" id='form'>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+
+
+<script>
+    const form = document.getElementById('form');
+    form.addEventListener('submit', submitHandler);
+
+    function submitHandler(e){
+        e.preventDefault();  //failsafe mechanism - tato metoda zabrání přirozenému odeslání formuláře.
+
+        fetch(form.action, {method:'POST', body: new FormData(form)})  //  This line makes a POST request to the form's action URL. 
+        .then(response=>response.json())   // The dot that follows is a promise made by the fetch function that represents an eventual completion of an operation that may be a synchronous.
+        .then(data=>{   //JSON data gets processed. If the processing is completed, JavaScript will send a successful submission alert.
+                if (data.message === 'success'){
+                    alert('Success!');
+                    form.reset(); //to reset the form after submission
+                } else {
+                    alert('Submission faild');
+                }
+        })
+        .catch(error=>{   //– Pomůže zachytit případné chyby při požadavku (např. problémy se sítí, špatná URL atd.).
+            console.error('Error', error);
+            alert('There was an error submitting the form');
+        });
+    }
+ 
+
+</script>
+
+
+</body>
+</html>
