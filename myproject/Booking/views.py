@@ -1,30 +1,30 @@
-from django.shortcuts import render, get_object_or_404
-from templates import *
-from .models import *
-from .serializers import *
-from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.contrib.auth.models import User, Group
-from django.core import serializers
-from datetime import datetime
-from django.http import HttpResponse, JsonResponse
-from rest_framework.decorators import api_view
-from django.db.models import Max
-from .permissions import IsManager, IsOwner
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from rest_framework.views import APIView
-from django.utils.timezone import localdate, datetime
-from django.http import JsonResponse
-from django.core import serializers
-from datetime import datetime
 import json
+from datetime import datetime
+
+from django.contrib.auth.models import Group, User
+from django.core import serializers
+from django.db.models import Max
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.utils.timezone import datetime, localdate
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
-from .forms import BookingForm
-from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .filters import MenuItemFilter
+from rest_framework import filters, generics, viewsets
+from rest_framework.decorators import api_view, action
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from templates import *
+
+from .filters import MenuItemFilter, OrderFilter #StatusPendingFilterBackend
+from .forms import BookingForm
+from .models import *
+from .permissions import IsManager, IsOwner
+from .serializers import *
+
 # Create your views here.
 
 def index(request):
@@ -33,9 +33,10 @@ def index(request):
 class CategoryView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = [DjangoFilterBackend]
 
 class MenuItemView(generics.ListCreateAPIView):
-    queryset = MenuItem.objects.prefetch_related('category')
+    queryset = MenuItem.objects.prefetch_related('category').order_by('pk')
     serializer_class = MenuItemSerializer
     #permission_classes = [IsManager,]
     filterset_class = MenuItemFilter
@@ -52,6 +53,13 @@ class MenuItemView(generics.ListCreateAPIView):
         if self.request.method != 'GET':
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
+    #we can overwrite pagination class for given view:
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 3 
+    pagination_class.page_size_query_param = 'page_size'
+    pagination_class.max_page_size = 10 
+
+
     
 
 
@@ -66,25 +74,66 @@ class OrderItemSingleView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderItemSerializer
     permission_classes = [IsOwner,]
 
-class OrderView(generics.ListCreateAPIView):
-    queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
-    serializer_class = OrderSerializer
-    #permission_classes = [IsAuthenticated,]
 
-class UserOrderView(generics.ListAPIView):
-    #returns only orders created by user itself
+class OrderViewSet(viewsets.ModelViewSet):
+    #all orders
     queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated]
+    filterset_class = OrderFilter
+    filter_backends = [DjangoFilterBackend]
+    pagination_class = None
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    # serializer.save() can be use to pass additional attributes to the save method
+    # perform_create is method on model viewset, can be use if we need to pass additional arguments to serializer save method
+    # we can overwrite it and pass custom data - chceme aby user nebol zadavany uzivatelom pri vytvoreni objednavky ale automaticky bol priradeny uzivatel kt je prihlaseny
+
+    def get_serializer_class(self):
+        # if it is create action (post) we use OrderCreateSerializer otherwise we use OrderSerializer
+        # can also check if post: if self.request.method == 'POST'
+        if self.action == 'create' or self.action == 'update':
+            return OrderCreateSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
-        user = self.request.user
-        qs = super().get_queryset()   #dostaneme queryset kt.sme definovali vyššie
-        return qs.filter(user=user)
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(user=self.request.user)
+        return qs
+
+    #nepotrebujeme uz action definovane nizsie lebo sme prepisali get_queryset a to zabespeci ze kazdy zakaznik uvidi iba svoje objednavky
+    # @action(detail=False, methods=['get'], url_path='user-orders')
+    # #our custom action to get only user's own orders; detail=False because we getting list(queryset) not single modul
+    # def user_orders(self, request):
+    #     orders = self.get_queryset().filter(user=request.user)
+    #     serializer = self.get_serializer(orders, many=True)
+    #     return Response(serializer.data)
+
+
+# class OrderView(generics.ListCreateAPIView):
+#     queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
+#     serializer_class = OrderSerializer
+#     filter_backends = [StatusPendingFilterBackend, DjangoFilterBackend]
+#     #permission_classes = [IsAuthenticated,]
+#     pagination_class = [LimitOffsetPagination]
+
+# class UserOrderView(generics.ListAPIView):
+#     #returns only orders created by user itself
+#     queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
+#     serializer_class = OrderSerializer
+#     permission_classes = [IsAuthenticated,]
+#     def get_queryset(self):
+#         user = self.request.user
+#         qs = super().get_queryset()   #dostaneme queryset kt.sme definovali vyššie
+#         return qs.filter(user=user)
 
 
 class OrderItemView(generics.ListCreateAPIView):
     queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
+    filter_backends = [DjangoFilterBackend]
 
 
 class MenuitemInfo(APIView):

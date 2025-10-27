@@ -30,6 +30,28 @@ POST http://127.0.0.1:8000/token/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "username": "rest_manager",
-    "password": "restika123"
+    "username": "rest_admin",
+    "password": "hesloadmin1"
+}
+
+###
+GET http://127.0.0.1:8000/orders/9 HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxNTc3ODQ5LCJpYXQiOjE3NjE1Nzc1NDksImp0aSI6IjRiOTEyZmI5ZDliMzRlN2M4NTYwYzk3NWI4MWRmZGY5IiwidXNlcl9pZCI6MX0.RXDRksJzbxbLrvEkerHh1zmctjPvN-kRgU70fPLyVxg
+
+
+###
+PUT http://127.0.0.1:8000/orders/9/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxNTc3ODQ5LCJpYXQiOjE3NjE1Nzc1NDksImp0aSI6IjRiOTEyZmI5ZDliMzRlN2M4NTYwYzk3NWI4MWRmZGY5IiwidXNlcl9pZCI6MX0.RXDRksJzbxbLrvEkerHh1zmctjPvN-kRgU70fPLyVxg
+
+{
+    "status": "pending",
+    "user": 1,
+    "delivery_crew": 2,
+    "items": [
+        {
+            "menuitem": 6,
+            "quantity": 2
+        }
+    ]
 }
