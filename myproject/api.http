@@ -35,8 +35,8 @@ Content-Type: application/json
 }
 
 ###
-GET http://127.0.0.1:8000/orders/9 HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxNTc3ODQ5LCJpYXQiOjE3NjE1Nzc1NDksImp0aSI6IjRiOTEyZmI5ZDliMzRlN2M4NTYwYzk3NWI4MWRmZGY5IiwidXNlcl9pZCI6MX0.RXDRksJzbxbLrvEkerHh1zmctjPvN-kRgU70fPLyVxg
+GET http://127.0.0.1:8000/orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMDA2NTg4LCJpYXQiOjE3NjIwMDYyODgsImp0aSI6IjM1OGM3YTBlZDMzODQ2ZTg4NmVjMTRiNzEyMDFiZTlmIiwidXNlcl9pZCI6MX0.G9T-u_UanP0gJ-KrmavpP1_o3UuQQ25BOepzTNSrpi4
 
 
 ###

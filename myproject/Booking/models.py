@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 import uuid
 # Create your models here.
 
@@ -65,3 +65,8 @@ class Booking(models.Model):
     reservation_slot = models.SmallIntegerField(default=10)
     def __str__(self):
         return self.name  
+
+
+# class User(AbstractUser):
+#     # create field for users to upload their curriculum vitae, upload_to - directory where cv will be saved, null=True-because we allready have users, blank=True-its optional
+#     cv = models.FileField(upload_to='cvs/', null=True, blank=True)

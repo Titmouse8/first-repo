@@ -1,6 +1,9 @@
 import json
 from datetime import datetime
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from django.contrib.auth.models import Group, User
 from django.core import serializers
 from django.db.models import Max
@@ -16,6 +19,7 @@ from rest_framework.pagination import (LimitOffsetPagination,
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.throttling import ScopedRateThrottle
 
 from templates import *
 
@@ -59,6 +63,20 @@ class MenuItemView(generics.ListCreateAPIView):
     pagination_class.page_size_query_param = 'page_size'
     pagination_class.max_page_size = 10 
 
+    @method_decorator(cache_page(60 * 15, key_prefix="menuitem_list"))   # sec * min =15min - to znamena ze ked sa stranka ulozi do cache tak v priebehu 15 min sa bude zbrazovat tak ako sa ulozila
+    #ak sa medzitym nejake data zmenia uvidime to az po 15min; key_prefix=""-tento prefix budu mat vsetky caches ulozene v container v redis ktore pochedzaju z tejto list() method
+    #response to every URL passed to this list method will be cached and stored in redis, if url changed e.g. to menu-item/?ordering=name objects sa znova natiahnu z dtab. ale potom ulozia do cache
+    #za kazdym ked sa trochu zmeni URL tak sa objects najprv tahaju z datab. a potom sa ulozia do cache a ked refreshneme uz dostaneme data z cache
+    def list(self, request, *args, **kwargs):   #nejdeme nic prepisovat v list method potrebujeme ju definovat len aby sme na nu mohli pouzit decorator
+        return super().list(request, *args, **kwargs)
+    
+
+    def get_queryset(self):
+        #get queryset is responsible for getting objects from database, when we delay it so we can see if object came from database or cache
+        import time
+        time.sleep(2)
+        return super().get_queryset()
+
 
     
 
@@ -77,6 +95,8 @@ class OrderItemSingleView(generics.RetrieveUpdateDestroyAPIView):
 
 class OrderViewSet(viewsets.ModelViewSet):
     #all orders
+    throttle_scope = 'order'
+    throttle_classes = [ScopedRateThrottle]
     queryset = Order.objects.prefetch_related('items__menuitem', 'user').all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -102,6 +122,19 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_staff:
             qs = qs.filter(user=self.request.user)
         return qs
+    
+    @method_decorator(cache_page(60 * 15, key_prefix="order_list"))
+    @method_decorator(vary_on_headers("Authorization"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    # Vary Headers - control caching based on specific request headers, ked pouzijeme cache_page tak mame caching na zaklade URL ale pri /orders dostaneme list of orders
+    # pre konkretneho pouzivatela kt. Bearer Token je pouzity v Header, ak mame cache stranky a zmeni sa pouzivatel tak stale budeme mat stranku z cache - predchadzajuceho 
+    # pouzivatela lebo URL sa nezmenilo, zmenil sa Header(konkretne token), takze potrebujeme caching na zaklade zmien v Headers - aby sme rozoznaly users lebo url je rovnaka
+    # you can also use Vary header to tell caching mechanism that the page output depends on cookie or language(vary on language)
+    # PROBLEM token used in authorization will be changed often(depends on JWT token lifetime) - lots of caches for the same user - every time access token will expire new cache 
+    # to invalidate cache for specific user will be problem becouse we cannot access token from request
+
+
 
     #nepotrebujeme uz action definovane nizsie lebo sme prepisali get_queryset a to zabespeci ze kazdy zakaznik uvidi iba svoje objednavky
     # @action(detail=False, methods=['get'], url_path='user-orders')
@@ -146,6 +179,12 @@ class MenuitemInfo(APIView):
         }
         )
         return Response(serializer.data)
+
+class UserCreateView(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
 
 
 

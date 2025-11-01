@@ -15,6 +15,7 @@ urlpatterns = [
     path('reservations/', views.reservations),
     path('book/', views.book),
     path('bookings/', views.bookings),
+    path('user/', views.UserCreateView.as_view()),
 ]
 
 router = DefaultRouter()
