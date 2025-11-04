@@ -28,6 +28,7 @@ from .forms import BookingForm
 from .models import *
 from .permissions import IsManager, IsOwner
 from .serializers import *
+from .tasks import send_order_confirmation_email
 
 # Create your views here.
 
@@ -105,10 +106,11 @@ class OrderViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        order = serializer.save(user=self.request.user)
     # serializer.save() can be use to pass additional attributes to the save method
     # perform_create is method on model viewset, can be use if we need to pass additional arguments to serializer save method
     # we can overwrite it and pass custom data - chceme aby user nebol zadavany uzivatelom pri vytvoreni objednavky ale automaticky bol priradeny uzivatel kt je prihlaseny
+        send_order_confirmation_email.delay(order.order_id, self.request.user.email)
 
     def get_serializer_class(self):
         # if it is create action (post) we use OrderCreateSerializer otherwise we use OrderSerializer

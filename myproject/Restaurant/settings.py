@@ -193,3 +193,8 @@ CACHES = {
 # its gonna print email to the console instead send to user - for developing phase
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# connect celery to redis - tell celery abour redis, same URL as CACHES settings
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+
+# to store the results from the celery tasks in redis - optional
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
