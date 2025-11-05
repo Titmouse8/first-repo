@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+#from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -25,8 +25,9 @@ urlpatterns = [
     path('silk/', include('silk.urls', namespace='silk')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
-    path('token/', TokenObtainPairView.as_view()),
-    path('token/refresh/', TokenRefreshView.as_view()),
+    path('auth/', include('djoser.urls.jwt')),
+    #path('token/', TokenObtainPairView.as_view()),
+    #path('token/refresh/', TokenRefreshView.as_view()),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     #OPTIONAL UI:

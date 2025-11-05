@@ -55,3 +55,34 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiY
         }
     ]
 }
+
+###
+GET http://127.0.0.1:8000/auth/users/me/ HTTP/1.1
+Authorization: Token d83ddcfd0f22f245b15540834ecfae85982e146f
+
+
+###
+POST http://127.0.0.1:8000/auth/token/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "rest_admin",
+    "password": "hesloadmin1"
+}
+
+###
+POST http://127.0.0.1:8000/auth/token/logout HTTP/1.1
+Authorization: Token d83ddcfd0f22f245b15540834ecfae85982e146f
+
+###
+POST http://127.0.0.1:8000/auth/jwt/create HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "rest_admin",
+    "password": "hesloadmin1"
+}
+
+###
+GET http://127.0.0.1:8000/auth/users/me/ HTTP/1.1
+Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMzQ4MzE2LCJpYXQiOjE3NjIzNDgwMTYsImp0aSI6IjJjNjVhMzMyYzQ2YTQ3YjU5ZjI0NzA0ZTU5ODM3MjJlIiwidXNlcl9pZCI6MX0.AphP28trV85v7WExulcIY1hYuGRClrghzN0Bi1c5hpA
